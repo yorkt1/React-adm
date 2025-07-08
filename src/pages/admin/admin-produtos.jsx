@@ -129,7 +129,7 @@ export default function Produtos() {
           <nav className="admin-nav">
             <ul>
               <li>
-                <a href="/admin">
+                <a href="/">
                   <i className="icon-dashboard"></i> Dashboard
                 </a>
               </li>
