@@ -1,0 +1,209 @@
+/	                Página inicial (home) com banners, categorias, ofertas
+/produtos	        Lista geral de produtos
+/produto/:id	        Página de detalhes do produto
+/categorias/:categoria	Lista de produtos por categoria
+/carrinho	        Carrinho de compras
+/checkout	        Checkout com dados do cliente, pagamento, envio
+/sucesso	        Confirmação de pedido após pagamento
+/login           	Login de usuário
+/cadastro	        Cadastro de usuário
+/perfil	                Perfil do cliente (dados pessoais, pedidos anteriores, etc.)
+/meus-pedidos	        Histórico de pedidos
+/sobre ou /contato	Informações da loja
+/busca?query=xyz	Resultados de pesquisa
+
+/admin	                Dashboard geral (resumo de vendas, clientes, etc)
+/admin/login	        Login de administrador
+/admin/produtos	        Lista e gerenciamento de produtos
+/admin/produtos/novo	Cadastro de novo produto
+/admin/produtos/:id/editar Edição de produto
+/admin/pedidos       	Visualização e atualização de pedidos
+/admin/usuarios		Lista de clientes cadastrados
+/admin/categorias	Gerenciar categorias
+/admin/cupons		Criar/editar cupons de desconto
+/admin/configurações
+
+GET	/api/produtos		Listar produtos
+GET	/api/produtos/:id	Detalhes de um produto
+POST	/api/produtos		Criar novo produto
+PUT	/api/produtos/:id	Editar produto
+DELETE	/api/produtos/:id	Deletar produto
+POST	/api/login		Login (usuário ou admin)
+POST	/api/usuarios		Criar novo usuário
+GET	/api/pedidos		Listar pedidos (admin ou usuário)
+POST	/api/pedidos		Criar novo pedido
+
+
+MODO DE USAR DUAS TELAS DE ADMIN E LOJA:
+
+
+✅ 1. Se você quer que o seu sistema (ex: admin do seu e-commerce) edite coisas que aparecem em outro site (front)
+Isso é comum! Por exemplo:
+
+Você tem um painel admin em admin.seusite.com
+
+E o e-commerce visível pro público em loja.seusite.com
+
+Como isso funciona?
+Você separa os sistemas, mas ambos usam a mesma API (back-end) e o mesmo banco de dados.
+
+Fluxo:
+
+Admin edita um produto via painel (admin.seusite.com/produtos/editar)
+
+Isso manda uma requisição PUT /api/produtos/:id
+
+O produto é atualizado no banco
+
+O front (loja.seusite.com) consulta o produto e já mostra atualizado
+
+💡 Ou seja: quem "edita" de verdade é o back-end, e tanto o admin quanto o front se conectam a ele.
+
+🌐 2. Se você quer editar um site de outra pessoa (sem acesso ao código)
+Aí o papo muda. Você não tem controle real, mas pode fazer algumas coisas com ferramentas de navegador ou extensões, como:
+
+⚠️ Só para fins de estudo:
+Usar o Inspecionar Elemento no navegador (botão direito → Inspecionar) pra alterar o HTML/CSS temporariamente.
+
+Usar extensões como Tampermonkey (permite rodar scripts no navegador e modificar sites).
+
+⚠️ Mas atenção: isso não altera o site real, só muda pra você, no seu navegador.
+
+🧠 3. Se você quer que dois sites diferentes compartilhem dados e editem entre si
+Isso é mais avançado, mas possível com:
+
+APIs REST ou GraphQL compartilhadas
+
+Autenticação entre sistemas (JWT, OAuth)
+
+Microserviços ou serviços externos conectados ao mesmo banco de dados
+
+👷‍♂️ Exemplo real: Admin edita e reflete no front
+Admin (React):
+
+js
+Copiar
+Editar
+const atualizarProduto = async () => {
+  await fetch(`https://api.seusite.com/produtos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome: 'Novo Nome', preco: 99.90 })
+  });
+};
+Front (React também):
+
+js
+Copiar
+Editar
+useEffect(() => {
+  fetch(`https://api.seusite.com/produtos/${id}`)
+    .then(res => res.json())
+    .then(data => setProduto(data));
+}, []);
+
+
+
+BANCO DE DADOS: 
+
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") // configure no .env
+}
+
+model Categoria {
+  id       Int       @id @default(autoincrement())
+  nome     String    @db.VarChar(100)
+  slug     String    @unique @db.VarChar(100)
+  produtos Produto[]
+}
+
+model Produto {
+  id          Int        @id @default(autoincrement())
+  nome        String     @db.VarChar(150)
+  descricao   String?    // texto opcional
+  preco       Float
+  imagemUrl   String?    @map("imagem_url") // para mapear campo MySQL
+  estoque     Int        @default(0)
+  categoriaId Int?       @map("categoria_id")
+  criadoEm    DateTime   @default(now()) @map("criado_em")
+
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id])
+  pedidoItens PedidoItem[]
+
+  @@index([categoriaId])
+}
+
+model User {
+  id          Int        @id @default(autoincrement())
+  nome        String?    @db.VarChar(100)
+  email       String     @unique @db.VarChar(150)
+  senhaHash   String     @map("senha_hash")
+  isAdmin     Boolean    @default(false) @map("is_admin")
+  criadoEm    DateTime   @default(now()) @map("criado_em")
+  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
+
+  enderecos   Endereco[]
+  pedidos     Pedido[]
+}
+
+model Endereco {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  cep         String?  @db.VarChar(20)
+  rua         String?  @db.VarChar(150)
+  numero      String?  @db.VarChar(10)
+  complemento String?  @db.VarChar(100)
+  bairro      String?  @db.VarChar(100)
+  cidade      String?  @db.VarChar(100)
+  estado      String?  @db.VarChar(50)
+
+  user        User     @relation(fields: [userId], references: [id])
+  pedidos     Pedido[]
+
+  @@index([userId])
+}
+
+model Pedido {
+  id          Int        @id @default(autoincrement())
+  userId      Int        @map("user_id")
+  enderecoId  Int        @map("endereco_id")
+  status      String     @default("pendente") @db.VarChar(50)
+  total       Float?
+  criadoEm    DateTime   @default(now()) @map("criado_em")
+
+  user        User       @relation(fields: [userId], references: [id])
+  endereco    Endereco   @relation(fields: [enderecoId], references: [id])
+  itens       PedidoItem[]
+
+  @@index([userId])
+  @@index([enderecoId])
+}
+
+model PedidoItem {
+  id           Int      @id @default(autoincrement())
+  pedidoId     Int      @map("pedido_id")
+  produtoId    Int      @map("produto_id")
+  quantidade   Int
+  precoUnitario Float    @map("preco_unitario")
+
+  pedido       Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto      Produto  @relation(fields: [produtoId], references: [id])
+
+  @@index([pedidoId])
+  @@index([produtoId])
+}
+
+model Cupom {
+  id                 Int      @id @default(autoincrement())
+  codigo             String   @unique @db.VarChar(50)
+  descontoPercentual  Float?   @map("desconto_percentual")
+  validoAte          DateTime? @map("valido_ate")
+  ativo              Boolean  @default(true)
+}
