@@ -1,28 +1,9 @@
-import { useState } from "react";
-import "./admin-style/admin.css";
-const produtosExemplo = [
-  {
-    id: 1001,
-    nome: "Minecraft Java Edition",
-    categoria: "Jogos",
-    estoque: "∞",
-    preco: "R$ 119,90",
-    status: "active",
-    imagem: "../images/product1-thumb1.jpg",
-  },
-  {
-    id: 1002,
-    nome: "Minecraft Bedrock Edition",
-    categoria: "Jogos",
-    estoque: "∞",
-    preco: "R$ 119,90",
-    status: "active",
-    imagem: "../images/product2-thumb1.jpg",
-  },
-];
+import { useEffect, useState } from "react";
+import axios from "axios";
+import "./admin.css";
 
 export default function Produtos() {
-  const [produtos, setProdutos] = useState(produtosExemplo);
+  const [produtos, setProdutos] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("Adicionar Novo Produto");
   const [formData, setFormData] = useState({
@@ -36,7 +17,21 @@ export default function Produtos() {
     imagem: "../images/placeholder-image.jpg",
   });
 
-  // Abre modal para novo produto
+  // Carregar produtos do backend
+  useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const response = await axios.get("http://localhost:3001/produto");
+        setProdutos(response.data);
+      } catch (err) {
+        console.error("Erro ao carregar produtos:", err);
+      }
+    }
+
+    carregarProdutos();
+  }, []);
+
+  // Abrir modal para novo produto
   function abrirModalNovo() {
     setModalTitle("Adicionar Novo Produto");
     setFormData({
@@ -52,61 +47,34 @@ export default function Produtos() {
     setModalOpen(true);
   }
 
-  // Abre modal para editar produto
+  // Abrir modal para editar produto
   function abrirModalEditar(produto) {
     setModalTitle("Editar Produto");
     setFormData({
       id: produto.id,
       nome: produto.nome,
-      categoria: produto.categoria,
+      categoria: produto.categoria || "",
       preco: produto.preco,
       estoque: produto.estoque,
       descricao: produto.descricao || "",
       status: produto.status,
-      imagem: produto.imagem,
+      imagem: produto.imagem || "../images/placeholder-image.jpg",
     });
     setModalOpen(true);
   }
 
-  // Fecha modal
+  // Fechar modal
   function fecharModal() {
     setModalOpen(false);
   }
 
-  // Handle mudanças no formulário
+  // Atualizar dados do formulário
   function handleChange(e) {
     const { id, value } = e.target;
     setFormData((old) => ({ ...old, [id]: value }));
   }
 
-  // Salvar produto (só atualiza o estado local)
-  function salvarProduto(e) {
-    e.preventDefault();
-    if (formData.id) {
-      // Edita produto
-      setProdutos((old) =>
-        old.map((p) => (p.id === formData.id ? { ...formData } : p))
-      );
-    } else {
-      // Adiciona novo produto (gerando id aleatório)
-      setProdutos((old) => [
-        ...old,
-        { ...formData, id: Date.now() }, // id temporário
-      ]);
-    }
-    fecharModal();
-    alert("Produto salvo com sucesso!");
-  }
-
-  // Excluir produto
-  function excluirProduto(id) {
-    if (confirm("Tem certeza que deseja excluir este produto?")) {
-      setProdutos((old) => old.filter((p) => p.id !== id));
-      alert("Produto excluído com sucesso!");
-    }
-  }
-
-  // Upload de imagem - só atualiza preview
+  // Upload da imagem (converte em base64)
   function handleImageUpload(e) {
     const file = e.target.files[0];
     if (file) {
@@ -118,12 +86,77 @@ export default function Produtos() {
     }
   }
 
+  // Salvar produto (POST ou PUT)
+  async function salvarProduto(e) {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+
+      if (formData.id) {
+        // Editar produto
+        await axios.put(
+          `http://localhost:3001/produto/${formData.id}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setProdutos((old) =>
+          old.map((p) => (p.id === formData.id ? { ...formData } : p))
+        );
+        alert("Produto atualizado com sucesso!");
+      } else {
+        // Adicionar produto
+        const response = await axios.post(
+          "http://localhost:3001/produto",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setProdutos((old) => [...old, response.data]);
+        alert("Produto adicionado com sucesso!");
+      }
+      fecharModal();
+    } catch (error) {
+      console.error("Erro ao salvar produto:", error);
+      alert("Erro ao salvar produto.");
+    }
+  }
+
+  // Excluir produto
+  async function excluirProduto(id) {
+    if (confirm("Tem certeza que deseja excluir este produto?")) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`http://localhost:3001/produto/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setProdutos((old) => old.filter((p) => p.id !== id));
+        alert("Produto excluído com sucesso!");
+      } catch (err) {
+        console.error("Erro ao excluir produto:", err);
+        alert("Erro ao excluir o produto.");
+      }
+    }
+  }
+
   return (
     <div className="admin-body">
       <div className="admin-container">
         <aside className="admin-sidebar">
           <div className="admin-logo">
-            <img src="minecraftlogo.png" alt="MineStore Admin" />
+            <img
+              src="https://res.cloudinary.com/dqewxdbfx/image/upload/v1752085697/minecraftlogo_ewoi8u.png"
+              alt="Logo"
+            />
             <h2>Admin</h2>
           </div>
           <nav className="admin-nav">
@@ -161,7 +194,10 @@ export default function Produtos() {
             </ul>
           </nav>
           <div className="admin-user">
-            <img src="avatar.jpeg" alt="Admin Avatar" />
+            <img
+              src="https://res.cloudinary.com/dqewxdbfx/image/upload/v1752085696/avatar_azs6ab.jpg"
+              alt="Admin Avatar"
+            />
             <div className="user-info">
               <strong>Admin</strong>
               <small>Guilherme@minestore.com</small>
@@ -192,9 +228,7 @@ export default function Produtos() {
                 <input
                   type="text"
                   placeholder="Pesquisar produtos..."
-                  onChange={(e) => {
-                    // Aqui você pode implementar filtro depois
-                  }}
+                  onChange={() => {}}
                 />
                 <button className="btn-search">
                   <i className="icon-search"></i>
@@ -229,14 +263,14 @@ export default function Produtos() {
                       <td>
                         <div className="product-info-cell">
                           <img
-                            src={p.imagem}
+                            src={p.imagem || "../images/placeholder-image.jpg"}
                             alt={p.nome}
                             className="product-thumb"
                           />
                           <span>{p.nome}</span>
                         </div>
                       </td>
-                      <td>{p.categoria}</td>
+                      <td>{p.categoria || "Sem categoria"}</td>
                       <td>{p.estoque}</td>
                       <td>{p.preco}</td>
                       <td>
@@ -268,7 +302,6 @@ export default function Produtos() {
               </table>
             </div>
 
-            {/* Paginação - só layout, sem lógica */}
             <div className="pagination">
               <button className="btn-pagination">
                 <i className="icon-chevron-left"></i>
@@ -361,7 +394,7 @@ export default function Produtos() {
                 </div>
 
                 <div className="form-group">
-                  <label>Imagens do Produto</label>
+                  <label>Imagem do Produto</label>
                   <div className="image-upload-container">
                     <div className="image-upload-preview">
                       <img
@@ -406,7 +439,11 @@ export default function Produtos() {
                 </div>
 
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-cancel" onClick={fecharModal}>
+                  <button
+                    type="button"
+                    className="btn btn-cancel"
+                    onClick={fecharModal}
+                  >
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-save">

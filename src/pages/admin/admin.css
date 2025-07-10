@@ -1,3 +1,5 @@
+
+
 /* Global Styles */
 :root {
     --primary-color: #5cb85c;
@@ -2211,4 +2213,90 @@ nav a:hover, nav a.active {
         width: 40px;
         height: 40px;
     }
+}
+
+
+/* Botões de ação na tabela */
+.btn-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  margin: 0 4px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-action.edit {
+  color: #3a8bcd;
+}
+
+.btn-action.edit:hover {
+  background-color: #e6f0fa;
+}
+
+.btn-action.delete {
+  color: #e74c3c;
+}
+
+.btn-action.delete:hover {
+  background-color: #fceaea;
+}
+
+/* Ícones genéricos */
+.icon-edit::before {
+  content: "✏️"; /* ou use uma lib de ícones */
+}
+
+.icon-delete::before {
+  content: "🗑️";
+}
+
+
+.status.low-stock {
+  background-color: #f39c12;
+  color: #fff;
+}
+
+.status.canceled {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.status.active {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.status.inactive {
+  background-color: #7f8c8d;
+  color: #fff;
+}
+
+.status.low-stock {
+  background-color: #f39c12;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.status.canceled {
+  background-color: #e74c3c;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.status.active {
+  background-color: #2ecc71;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.status.inactive {
+  background-color: #7f8c8d;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
 }
