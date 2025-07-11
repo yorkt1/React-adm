@@ -17,11 +17,14 @@ export default function Produtos() {
     imagem: "../images/placeholder-image.jpg",
   });
 
+  // Base URL da API online no Render
+  const API_BASE_URL = "https://minestore.onrender.com";
+
   // Carregar produtos do backend
   useEffect(() => {
     async function carregarProdutos() {
       try {
-        const response = await axios.get("http://localhost:3001/produto");
+        const response = await axios.get(`${API_BASE_URL}/produto`);
         setProdutos(response.data);
       } catch (err) {
         console.error("Erro ao carregar produtos:", err);
@@ -95,7 +98,7 @@ export default function Produtos() {
       if (formData.id) {
         // Editar produto
         await axios.put(
-          `http://localhost:3001/produto/${formData.id}`,
+          `${API_BASE_URL}/produto/${formData.id}`,
           formData,
           {
             headers: {
@@ -111,7 +114,7 @@ export default function Produtos() {
       } else {
         // Adicionar produto
         const response = await axios.post(
-          "http://localhost:3001/produto",
+          `${API_BASE_URL}/produto`,
           formData,
           {
             headers: {
@@ -134,7 +137,7 @@ export default function Produtos() {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:3001/produto/${id}`, {
+        await axios.delete(`${API_BASE_URL}/produto/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
