@@ -7,7 +7,7 @@ export default function Produtos() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("Adicionar Novo Produto");
   const [formData, setFormData] = useState({
-    id: null,
+    id: null, // aqui guardamos o _id do produto
     nome: "",
     categoria: "",
     preco: "",
@@ -17,7 +17,6 @@ export default function Produtos() {
     imagem: "../images/placeholder-image.jpg",
   });
 
-  // Base URL da API online no Render
   const API_BASE_URL = "https://minestore.onrender.com";
 
   // Carregar produtos do backend
@@ -54,7 +53,7 @@ export default function Produtos() {
   function abrirModalEditar(produto) {
     setModalTitle("Editar Produto");
     setFormData({
-      id: produto.id,
+      id: produto._id,
       nome: produto.nome,
       categoria: produto.categoria || "",
       preco: produto.preco,
@@ -93,7 +92,7 @@ export default function Produtos() {
   async function salvarProduto(e) {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token"); // caso use token, senão pode remover
 
       if (formData.id) {
         // Editar produto
@@ -108,7 +107,7 @@ export default function Produtos() {
         );
 
         setProdutos((old) =>
-          old.map((p) => (p.id === formData.id ? { ...formData } : p))
+          old.map((p) => (p._id === formData.id ? { ...formData } : p))
         );
         alert("Produto atualizado com sucesso!");
       } else {
@@ -142,7 +141,7 @@ export default function Produtos() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setProdutos((old) => old.filter((p) => p.id !== id));
+        setProdutos((old) => old.filter((p) => p._id !== id));
         alert("Produto excluído com sucesso!");
       } catch (err) {
         console.error("Erro ao excluir produto:", err);
@@ -261,8 +260,8 @@ export default function Produtos() {
                 </thead>
                 <tbody>
                   {produtos.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.id}</td>
+                    <tr key={p._id}>
+                      <td>{p._id}</td>
                       <td>
                         <div className="product-info-cell">
                           <img
@@ -294,7 +293,7 @@ export default function Produtos() {
                         </button>
                         <button
                           className="btn-action delete"
-                          onClick={() => excluirProduto(p.id)}
+                          onClick={() => excluirProduto(p._id)}
                         >
                           <i className="icon-delete"></i>
                         </button>
