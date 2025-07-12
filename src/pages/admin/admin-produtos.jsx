@@ -7,7 +7,7 @@ export default function Produtos() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("Adicionar Novo Produto");
   const [formData, setFormData] = useState({
-    id: null, // aqui guardamos o _id do produto
+    id: null, // aqui guardamos o id sequencial do produto
     nome: "",
     categoria: "",
     preco: "",
@@ -24,12 +24,16 @@ export default function Produtos() {
     async function carregarProdutos() {
       try {
         const response = await axios.get(`${API_BASE_URL}/produto`);
-        setProdutos(response.data);
+        // Garantir que o campo id sequencial esteja presente e consistente
+        const produtosComId = response.data.map((p) => ({
+          ...p,
+          id: p.id !== undefined ? p.id : p._id,
+        }));
+        setProdutos(produtosComId);
       } catch (err) {
         console.error("Erro ao carregar produtos:", err);
       }
     }
-
     carregarProdutos();
   }, []);
 
@@ -53,7 +57,7 @@ export default function Produtos() {
   function abrirModalEditar(produto) {
     setModalTitle("Editar Produto");
     setFormData({
-      id: produto._id,
+      id: produto.id,
       nome: produto.nome,
       categoria: produto.categoria || "",
       preco: produto.preco,
@@ -80,6 +84,14 @@ export default function Produtos() {
   function handleImageUpload(e) {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Arquivo muito grande! Máximo 2MB.");
+        return;
+      }
+      if (!["image/jpeg", "image/png"].includes(file.type)) {
+        alert("Formato inválido! Use JPG ou PNG.");
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (ev) => {
         setFormData((old) => ({ ...old, imagem: ev.target.result }));
@@ -92,7 +104,7 @@ export default function Produtos() {
   async function salvarProduto(e) {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token"); // caso use token, senão pode remover
+      const token = localStorage.getItem("token"); // Se usar token, senão pode remover
 
       if (formData.id) {
         // Editar produto
@@ -107,7 +119,7 @@ export default function Produtos() {
         );
 
         setProdutos((old) =>
-          old.map((p) => (p._id === formData.id ? { ...formData } : p))
+          old.map((p) => (p.id === formData.id ? { ...formData } : p))
         );
         alert("Produto atualizado com sucesso!");
       } else {
@@ -121,7 +133,14 @@ export default function Produtos() {
             },
           }
         );
-        setProdutos((old) => [...old, response.data]);
+
+        // Garantir que o produto retornado tem o campo id sequencial
+        const novoProduto = {
+          ...response.data,
+          id: response.data.id !== undefined ? response.data.id : response.data._id,
+        };
+
+        setProdutos((old) => [...old, novoProduto]);
         alert("Produto adicionado com sucesso!");
       }
       fecharModal();
@@ -141,7 +160,7 @@ export default function Produtos() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setProdutos((old) => old.filter((p) => p._id !== id));
+        setProdutos((old) => old.filter((p) => p.id !== id));
         alert("Produto excluído com sucesso!");
       } catch (err) {
         console.error("Erro ao excluir produto:", err);
@@ -260,8 +279,8 @@ export default function Produtos() {
                 </thead>
                 <tbody>
                   {produtos.map((p) => (
-                    <tr key={p._id}>
-                      <td>{p._id}</td>
+                    <tr key={p.id}>
+                      <td>{p.id}</td>
                       <td>
                         <div className="product-info-cell">
                           <img
@@ -274,7 +293,12 @@ export default function Produtos() {
                       </td>
                       <td>{p.categoria || "Sem categoria"}</td>
                       <td>{p.estoque}</td>
-                      <td>{p.preco}</td>
+                      <td>
+                        {Number(p.preco).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </td>
                       <td>
                         <span className={`status ${p.status}`}>
                           {p.status === "active"
@@ -293,7 +317,7 @@ export default function Produtos() {
                         </button>
                         <button
                           className="btn-action delete"
-                          onClick={() => excluirProduto(p._id)}
+                          onClick={() => excluirProduto(p.id)}
                         >
                           <i className="icon-delete"></i>
                         </button>
