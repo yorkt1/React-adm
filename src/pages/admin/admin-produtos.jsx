@@ -438,7 +438,7 @@ export default function Produtos() {
     height: "150px",      // define altura fixa do quadrado
     objectFit: "cover",   // cobre todo o quadrado cortando o excesso
     borderRadius: "8px", }}
-      onError={(e) => (e.target.src = "")}
+      onError={(e) => (e.target.src = "sem img")}
     />
   </div>
 </div>
