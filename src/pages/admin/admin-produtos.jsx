@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "./admin.css";
+import "./produtos.css";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
@@ -284,7 +284,7 @@ export default function Produtos() {
                       <td>
                         <div className="product-info-cell">
                           <img
-                            src={p.imagem || "../images/placeholder-image.jpg"}
+                            src={p.imagem || ""}
                             alt={p.nome}
                             className="product-thumb"
                           />
@@ -419,37 +419,36 @@ export default function Produtos() {
                   ></textarea>
                 </div>
 
-                <div className="form-group">
-                  <label>Imagem do Produto</label>
-                  <div className="image-upload-container">
-                    <div className="image-upload-preview">
-                      <img
-                        id="preview-image"
-                        src={formData.imagem}
-                        alt="Pré-visualização"
-                      />
-                    </div>
-                    <div className="image-upload-controls">
-                      <input
-                        type="file"
-                        id="product-image"
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        onChange={handleImageUpload}
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-upload"
-                        onClick={() =>
-                          document.getElementById("product-image").click()
-                        }
-                      >
-                        Selecionar Imagem
-                      </button>
-                      <small>Formatos suportados: JPG, PNG (Máx. 2MB)</small>
-                    </div>
-                  </div>
-                </div>
+                
+<div className="form-group">
+  <label htmlFor="imagem">Link da Imagem do Produto</label>
+  <input
+    type="text"
+    id="imagem"
+    value={formData.imagem}
+    onChange={handleChange}
+    placeholder="Cole o link da imagem aqui"
+  />
+  <div className="image-upload-preview" style={{ marginTop: "10px" }}>
+    <img
+      id="preview-image"
+      src={formData.imagem}
+      alt="Pré-visualização"
+      style={{     width: "200px",       // define largura fixa do quadrado
+    height: "150px",      // define altura fixa do quadrado
+    objectFit: "cover",   // cobre todo o quadrado cortando o excesso
+    borderRadius: "8px", }}
+      onError={(e) => (e.target.src = "")}
+    />
+  </div>
+</div>
+
+
+
+
+
+
+
 
                 <div className="form-group">
                   <label htmlFor="status">Status</label>

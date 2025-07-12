@@ -1552,12 +1552,7 @@ nav a:hover, nav a.active {
     gap: 10px;
 }
 
-.product-thumb {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-}
+
 
 .status {
     display: inline-block;
@@ -2209,8 +2204,5 @@ nav a:hover, nav a.active {
         align-items: flex-start;
     }
     
-    .product-thumb {
-        width: 40px;
-        height: 40px;
-    }
+ 
 }
